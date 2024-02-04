@@ -1,0 +1,39 @@
+---
+title: "FML_NIHARIKA"
+author: "Niharika"
+date: "2024-02-02"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data set source
+https://www.kaggle.com/datasets/marslinoedward/bank-customer-churn-prediction
+
+##Import the dataset into R
+```{R}
+d <- read.csv("C:/Users/rajes/OneDrive/Desktop/NIharika/customer churn.csv")
+```
+
+```{r}
+head(d)
+
+```
+##Print out descriptive statistics for a selection of quantitative and categorical variables.
+```{r}
+summary(d)
+```
+##transform at least one variable. It doesn't matter what the transformation is.
+```{r}
+d$CreditScore <- log(d$CreditScore)
+head(d$Age)
+
+```
+##Plot at least one quantitative variable, and one scatterplot
+```{r}
+plot(d$CreditScore, d$ Age ,main = "Scatterplot of Credit Score vs Age", xlab = "Credit Score", ylab = "Age", col = "firebrick", pch = 18)
+```
