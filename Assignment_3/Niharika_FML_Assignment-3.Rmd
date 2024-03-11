@@ -1,0 +1,132 @@
+---
+title: "FML_Assignment3"
+author: "Niharika"
+date: "2024-03-10"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(reshape2)
+library(dplyr)
+library(tidyr)
+library(klaR) 
+library(e1071)
+```
+
+```{r}
+universal.B.bank <-  read.csv("C:/Users/nihar/Downloads/UniversalBank.csv")
+dim(universal.B.bank)
+
+
+```
+
+```{r}
+set.seed(159) # Important to ensure that we get the same sample if we rerun the code
+
+train.index <- sample(row.names(universal.B.bank), 0.6*dim(universal.B.bank)[1]) # 60% training data
+train.bank <- universal.B.bank[train.index,]
+
+test.index <- setdiff(row.names(universal.B.bank), train.index) # 40% validation data
+test.bank <- universal.B.bank[test.index,]
+
+colnames(train.bank)[c(10,14)] <- c("Loan","CC")
+head(train.bank)
+```
+
+```{r}
+# A.Create a pivot table for the training data with Online as a column variable, CC as a row
+
+pivot.table <- ftable(train.bank[ ,c(14,10,13)])
+pivot.table
+
+data.table <- ftable(train.bank[ ,c(14,13)])
+data.table
+```
+
+```{r}
+# B.Consider the task of classifying a customer who owns a bank credit card and is actively using
+
+P_Loan1 <- pivot.table[4,2]/ data.table[2,2]
+P_Loan1
+
+P_cc_online <- data.table[2,2]/(data.table[1,1]+data.table[1,2]+data.table[2,1]+data.table[2,2])
+P_cc_online
+```
+
+```{r}
+# c.Create two separate pivot tables for the training data. One will have Loan (rows) as a
+
+Pivot.table1 <- ftable(train.bank[ ,c(10,13)])
+Pivot.table1
+
+Pivot.table2 <- ftable(train.bank[ ,c(10,14)])
+Pivot.table2
+```
+
+```{r}
+#D.credit card holders among loan acceptors
+# P(CC = 1 | Loan = 1) (the proportion of credit card holders among the loan acceptors)
+P1 <- Pivot.table2[2,2]/ (Pivot.table2[2,1]+Pivot.table2[2,2])
+P1
+#online users among loan acceptors
+# P(Online = 1 | Loan = 1
+P2 <- Pivot.table1[2,2]/ (Pivot.table1[2,1]+Pivot.table1[2,2])
+P2
+# Proportion of loan acceptors
+# P(Loan = 1) (the proportion of loan acceptors)
+P3 <- (Pivot.table1[2,2]+Pivot.table1[2,1])/ (Pivot.table1[1,1]+Pivot.table1[1,2]+Pivot.table1[2,1]+Pivot.table1[2,2])
+P3
+# credit card holders among loan deniers
+#P(CC = 1 | Loan = 0)
+P4 <- Pivot.table2[1,2]/ (Pivot.table2[1,1]+Pivot.table2[1,2])
+P4
+#online users among loan deniers
+#P(Online = 1 | Loan = 0)
+P5 <- Pivot.table1[1,2]/ (Pivot.table1[1,1]+Pivot.table1[1,2])
+P5
+# Proportion of loan deniers
+#P(Loan = 0)
+P6 <- (Pivot.table1[1,2]+Pivot.table1[1,1])/ (Pivot.table1[1,1]+Pivot.table1[1,2]+Pivot.table1[2,1]+Pivot.table1[2,2])
+P6
+
+```
+
+```{r}
+#Since Naive Bayes assumes conditional independence, probablity of accepting loan when they are online users and credit card holders will be equal to the product the probability of online users among loan acceptors and probability online users among loan acceptors
+# E.Use the quantities computed above to compute the naive Bayes probability P(Loan = 1 | CC
+
+probability_NB <- (P1*P2*P3)/P_cc_online
+probability_NB
+```
+```{r}
+# F.Compare this value with the one obtained from the pivot table in (B). Which is a more
+#accurate estimate?
+# the exact probability of accepting loan when they are online users and credit card holders from the pivot table is 0.1019231, which is not equal to the exact naive baiyes probability 0.09994837. because, we are considering conditional independance for calculating the exact naive baiyes probability, which may not give us the exact result.the probability from the pivot table was the exact estimate as we directly calculated the probabilities from the data
+```
+
+
+we require 3 entries from the table to calculate the naive baiyes,  prior Personal loan, Online and credit card
+```{r}
+# G.Which of the entries in this table are needed for computing P(Loan = 1 | CC = 1, Online = 1)?
+
+# training the naiveBayes model by considering the predictors, Online and CC
+nb <- naiveBayes(Loan ~ Online + CC, data = train.bank)
+
+# Predicting the data using naiveBayes model
+nbt <- predict(nb, newdata = train.bank , type = "raw")
+
+train.bank$nbpred.probability <- nbt[,2]
+
+train.bank
+```
+we can see many entries which are very close to the exact naive baiye's probability in the training data set.
+
+
+
