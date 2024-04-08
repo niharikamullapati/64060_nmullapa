@@ -1,0 +1,235 @@
+---
+title: "Assignment_5"
+author: "Niharika"
+date: "2024-04-07"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r}
+library(class)
+library(caret)
+library(e1071)
+library(tidyverse)
+library(ISLR)
+library(factoextra)
+library(dbscan)
+library(cluster) 
+library(klustR)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+```
+```{r}
+cereals.data <- read.csv("C:/Users/nihar/Downloads/Cereals.csv")
+
+# Omit the null values
+cereals.data <- na.omit(cereals.data)
+
+# check the dimensions of the dataset
+dim(cereals.data)
+head(cereals.data)
+
+# To know the column names of the dataset 
+t(t(names(cereals.data)))# The 't' function creates a transpose of the dataframe
+```
+
+Assignment Task A 
+#“Apply hierarchical clustering to the data using Euclidean distance to the normalized measurements. Use Agnes to compare the clustering from single linkage, complete linkage, average linkage, and Ward. Choose the best method.” 
+```{r}
+
+clust.data <- cereals.data[ ,4:16]
+dim(clust.data)
+head(clust.data)
+summary(clust.data)
+```
+
+
+```{r}
+scaled.data <- scale(clust.data)
+head(scaled.data)
+dim(scaled.data)
+
+distance <- get_dist(scaled.data)
+fviz_dist(distance)
+```
+```{r}
+# Consider the Euclidean distance to know the distance between each point
+dist <- dist(scaled.data, method = "euclidean")
+
+# cluster using different linkage methods
+# Single linkage
+hc_single <- agnes(dist,method = "single")
+
+# Complete linkage
+hc_complete <- agnes(dist,method = "complete")
+
+# average linkage
+hc_average <- agnes(dist,method = "average")
+
+# Ward's linkage
+hc_ward <- agnes(dist,method = "ward")
+
+#comparing the above links values with Agglomerative coefficient(ac)
+print(hc_single$ac)
+print(hc_complete$ac)
+print(hc_average$ac)
+print(hc_ward$ac)
+```
+From the output we can see that the agglomerative coefficient for wards method is high. so we need to consider that.
+
+
+Assignment Task B 
+#“How many clusters would you choose?”
+ I choose (3-8)
+
+```{r}
+# Cluster the data using Hierarchical clustering
+hc3 <- hclust(dist, method ="ward.D")
+
+# Plot the dendrogram
+plot(hc3, cex = 0.1, main = "Dendrogram of Hierarchical Clustering for No.of clusters=3")
+
+# Split the tree
+data3 = rect.hclust(hc3, k=3 , border = 1:3)
+clusters3 <- cutree(hc3, k=3)
+
+# To know the cluster size
+data_with_clusters3 <- cbind(Cluster = data3)
+data_with_clusters3
+
+# add the clusters to the table
+clustered <- cbind(cereals.data, clusters3)
+
+
+
+
+
+# heatmap for the data
+heatmap(as.matrix(scaled.data), Colv = NA, hclustfun = hclust, 
+        col=rev(paste("gray",1:99,sep="")))
+
+# plot the data
+ggplot(clustered, aes(factor(clusters3), fill= mfr))+ geom_bar(position='dodge')+labs(x='clusters3')
+```
+```{r}
+# Cluster the data using Hierarchical clustering
+hc4 <- hclust(dist, method ="ward.D")
+
+# Plot the dendrogram
+plot(hc4, cex = 0.1, main = "Dendrogram of Hierarchical Clustering for No.of clusters=4")
+
+# Split the tree
+data4 = rect.hclust(hc4, k=4 , border = 1:3)
+clusters4 <- cutree(hc4, k=4)
+
+# To know the cluster size
+data_with_clusters <- cbind(Cluster = data4)
+data_with_clusters
+
+# add the clusters to the table
+clustered <- cbind(cereals.data, clusters4)
+
+# plot the graph
+ggplot(clustered, aes(factor(clusters4), fill= mfr))+ geom_bar(position='dodge')+labs(x='clusters4')
+```
+Assignment C 
+#“Comment on the structure of the clusters and on their stability. Hint: To check stability, partition the data and see how well clusters formed based on one part apply to the other part. To do this:  
+
+Ans.To check stability of clusters, the data set will be split into a 70/30 partition. The 70% will 
+be used to create cluster assignments again, and then the remaining 30% will be assigned 
+based on their closest centroid.
+```{R}
+set.seed(111780) 
+# Split the data into 70% partition A and 30% partition B 
+cerealIndex <- createDataPartition(cereals.data$protein, p=0.3, list = 
+F) 
+cereal_preprocessed_PartitionB <- cereals.data[cerealIndex, ] 
+cereal_preprocessed_PartitionA <- cereals.data[-cerealIndex,] 
+```
+#1. Cluster partition A #2. Use the cluster centroids from A to assign each record in partition B (each record is assigned to the cluster with the closest centroid). #3. Assess how consistent the cluster assignments are compared to the assignments based on all the data”
+
+```{r}
+# Cluster the data using Hierarchical clustering
+hc5 <- hclust(dist, method ="ward.D")
+
+# Plot the dendrogram
+plot(hc5, cex = 0.1, main = "Dendrogram of Hierarchical Clustering for No.of clusters=5")
+
+# Split the tree
+data5 = rect.hclust(hc5, k=5 , border = 1:3)
+clusters5 <- cutree(hc5, k=5)
+
+# To know the cluster size
+data_with_clusters <- cbind(Cluster = data5)
+data_with_clusters
+
+# add the data
+clustered <- cbind(cereals.data, clusters5)
+
+
+# heatmap for the data
+heatmap(as.matrix(scaled.data), Colv = NA, hclustfun = hclust, 
+        col=rev(paste("gray",1:99,sep="")))
+# plot the data
+ggplot(clustered, aes(factor(clusters5), fill= mfr))+ geom_bar(position='dodge')+labs(x='clusters5')
+```
+
+```{r}
+# Cluster the data using Hierarchical clustering
+hc6 <- hclust(dist, method ="ward.D")
+
+# Plot the dendrogram
+plot(hc6, cex = 0.1, main = "Dendrogram of Hierarchical Clustering for No.of clusters=6")
+
+# Split the tree
+data6 = rect.hclust(hc6, k=6 , border = 1:3)
+clusters6 <- cutree(hc6, k=6)
+
+# To know the cluster size
+data_with_clusters <- cbind(Cluster = data6)
+data_with_clusters
+
+# add the data
+clustered <- cbind(cereals.data, clusters6)
+
+
+# heatmap for the data
+heatmap(as.matrix(scaled.data), Colv = NA, hclustfun = hclust, 
+        col=rev(paste("gray",1:99,sep="")))
+# plot the data
+ggplot(clustered, aes(factor(clusters6), fill= mfr))+ geom_bar(position='dodge')+labs(x='clusters6')
+```
+```{r}
+# Cluster the data using Hierarchical clustering
+hc8 <- hclust(dist, method ="ward.D")
+
+# Plot the dendrogram
+plot(hc8, cex = 0.1, main = "Dendrogram of Hierarchical Clustering for No.of clusters=8")
+
+# Split the tree
+data8 = rect.hclust(hc8, k=8 , border = 1:3)
+clusters8 <- cutree(hc8, k=8)
+
+# To know the cluster size
+data_with_clusters <- cbind(Cluster = data8)
+data_with_clusters
+
+# add the data
+clustered <- cbind(cereals.data, clusters8)
+
+
+# heatmap for the data
+heatmap(as.matrix(scaled.data), Colv = NA, hclustfun = hclust, 
+        col=rev(paste("gray",1:99,sep="")))
+# plot the data
+ggplot(clustered, aes(factor(clusters8), fill= mfr))+ geom_bar(position='dodge')+labs(x='clusters8')
+```
+Assignment Task D 
+
+In the context of selecting cereals for elementary school cafeterias to ensure a healthy diet, it's important to consider the normalization of data. Normalizing the data may not be appropriate because it would scale the nutritional information based on the sample of cereals being analyzed. This approach could be misleading because the dataset might include cereals with extremely high sugar content and very low fiber, iron, and other essential nutrients. When normalized across the sample set, it becomes difficult to interpret the nutritional value accurately. For instance, a cereal with a normalized value of 0.999 for iron might appear to have nearly all the nutritional iron a child needs, but it could simply be the best among a set of unhealthy options.
+A more suitable approach for preprocessing the data would be to express it as a ratio to the daily recommended intake of calories, fiber, carbohydrates, etc., for a child. This method allows analysts to make better-informed decisions about clustering without allowing a few variables with larger values to dominate the distance calculations. By reviewing the clusters, analysts can assess the average nutritional values within each cluster to determine what percentage of a student's daily recommended nutrition would come from each cereal. This approach enables staff to make informed decisions about selecting "healthy" cereals for the cafeteria.
+
+
